@@ -10,26 +10,26 @@
             <input type="text" id="name" v-model="form.name" required />
           </div>
           <div class="form-group">
-            <label for="email">邮箱：</label>
-            <input type="email" id="email" v-model="form.email" required />
-          </div>
-          <div class="form-group">
             <label for="message">留言内容：</label>
             <textarea id="message" v-model="form.message" rows="5" required></textarea>
           </div>
-          <button type="submit" class="submit-btn">提交留言</button>
+          <button type="submit" class="submit-btn" :disabled="submitting">
+            {{ submitting ? '提交中...' : '提交留言' }}
+          </button>
         </form>
       </div>
       
       <div class="messages-list">
         <h3>留言列表</h3>
-        <div v-if="messages.length === 0" class="no-messages">
+        <div v-if="loading" class="loading">
+          加载中...
+        </div>
+        <div v-else-if="messages.length === 0" class="no-messages">
           暂无留言，快来成为第一个留言的人吧！
         </div>
         <div v-for="msg in messages" :key="msg.id" class="message-item">
           <div class="message-header">
             <span class="message-name">{{ msg.name }}</span>
-            <span class="message-date">{{ msg.date }}</span>
           </div>
           <div class="message-content">{{ msg.message }}</div>
         </div>
@@ -39,34 +39,80 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-const form = ref({
-  name: '',
-  email: '',
-  message: ''
+// 创建 axios 实例，配置 baseURL
+const api = axios.create({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 })
 
-const messages = ref([
-  {
-    id: 1,
-    name: '访客',
-    date: '2025年12月28日',
-    message: '这是一个很好的博客！'
-  }
-])
+const messages = ref([])
+const loading = ref(true)
+const submitting = ref(false)
+const form = ref({ name: '', message: '' })
 
-const submitMessage = () => {
-  const newMessage = {
-    id: messages.value.length + 1,
-    name: form.value.name,
-    date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
-    message: form.value.message
+// 加载远程留言数据
+async function loadUsers() {
+  loading.value = true
+  try {
+    const response = await api.get('/msg')
+    const payload = response.data || {}
+    const data = Array.isArray(payload.data) ? payload.data : []
+    messages.value = data.map((u) => {
+      return {
+        name: u.name || '匿名',
+        message: u.msg || ''
+      }
+    })
+  } catch (err) {
+    console.error('加载留言失败：', err)
+    messages.value = []
+  } finally {
+    loading.value = false
   }
-  messages.value.unshift(newMessage)
-  form.value = { name: '', email: '', message: '' }
-  alert('留言提交成功！')
 }
+
+// 提交留言
+async function submitMessage() {
+  if (!form.value.name || !form.value.message) {
+    alert('请填写完整信息')
+    return
+  }
+
+  submitting.value = true
+  try {
+    const response = await api.post('/msg/guestbook', {
+      name: form.value.name.trim(),
+      msg: form.value.message.trim()
+    })
+
+    // 根据后端返回格式处理
+    if (response.data.code === 1) {
+      alert('留言提交成功！')
+      form.value = { name: '', message: '' }
+      // 重新加载留言列表
+      await loadUsers()
+    } else {
+      alert('留言提交失败: ' + (response.data.msg || '未知错误'))
+    }
+  } catch (err) {
+    console.error('提交留言失败：', err)
+    alert(err.response?.data?.msg || err.message || '提交留言失败，请检查网络连接或稍后重试')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 生命周期钩子：组件挂载时自动加载
+onMounted(() => {
+  loadUsers()
+})
+
+
 </script>
 
 <style scoped>
@@ -139,8 +185,19 @@ const submitMessage = () => {
   transition: background-color 0.3s;
 }
 
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
   background-color: #333333;
+}
+
+.submit-btn:disabled {
+  background-color: #999999;
+  cursor: not-allowed;
+}
+
+.loading {
+  color: #666666;
+  text-align: center;
+  padding: 40px 0;
 }
 
 .no-messages {

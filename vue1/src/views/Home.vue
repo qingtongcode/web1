@@ -1,6 +1,6 @@
 <template>
   <div class="home-page">
-    <ArticleList />
+    <ArticleList :show-content="true" />
   </div>
 </template>
 

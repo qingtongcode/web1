@@ -5,7 +5,7 @@
       <nav class="top-nav">
         <router-link to="/" class="nav-link">首页</router-link>
         <router-link to="/articles" class="nav-link">文章列表</router-link>
-        <router-link to="/guestbook" class="nav-link">留言板</router-link>
+        <router-link to="/msg" class="nav-link">留言板</router-link>
         <router-link to="/about" class="nav-link">关于</router-link>
       </nav>
     </header>
@@ -23,7 +23,7 @@
         <nav class="nav-links">
           <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }">首页</router-link>
           <router-link to="/articles" class="nav-item" :class="{ active: $route.path === '/articles' }">文章列表</router-link>
-          <router-link to="/guestbook" class="nav-item" :class="{ active: $route.path === '/guestbook' }">留言板</router-link>
+          <router-link to="/msg" class="nav-item" :class="{ active: $route.path === '/msg' }">留言板</router-link>
           <router-link to="/about" class="nav-item" :class="{ active: $route.path === '/about' }">关于</router-link>
         </nav>
         <div class="search-icon">

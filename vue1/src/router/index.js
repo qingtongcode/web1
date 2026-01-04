@@ -6,7 +6,7 @@ import About from '../views/About.vue'
 
 const routes = [
   {
-    path: '/',
+    path: '/home',
     name: 'Home',
     component: Home
   },
@@ -16,7 +16,7 @@ const routes = [
     component: ArticleListPage
   },
   {
-    path: '/guestbook',
+    path: '/msg',
     name: 'Guestbook',
     component: Guestbook
   },
@@ -24,6 +24,13 @@ const routes = [
     path: '/about',
     name: 'About',
     component: About
+  }
+  ,
+  {
+    path: '/article/:id',
+    name: 'ArticleDetail',
+    component: () => import('../views/ArticleDetail.vue'),
+    props: true
   }
 ]
 
